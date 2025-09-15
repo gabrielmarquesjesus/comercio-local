@@ -32,9 +32,10 @@
         <p class="mt-4 text-xl sm:text-2xl text-gray-600 font-light">Iniciativa Amigos do Bairro</p>
     </header>
 
-    <!-- Campo de Busca Adicionado -->
-    <div class="mb-8">
-        <input type="text" id="searchInput" placeholder="Pesquisar por serviço ou nome do estabelecimento..." class="w-full p-4 text-lg rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
+    <!-- Campos de Busca Adicionados -->
+    <div class="mb-8 flex flex-col sm:flex-row gap-4">
+        <input type="text" id="nameInput" placeholder="Nome do estabelecimento..." class="w-full p-4 text-lg rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
+        <input type="text" id="serviceInput" placeholder="Prestação de serviço..." class="w-full p-4 text-lg rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
     </div>
 
     <!-- Container para os cartões de comércio -->
@@ -50,7 +51,8 @@
         const GOOGLE_SHEETS_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
 
         const container = document.getElementById('catalog-container');
-        const searchInput = document.getElementById('searchInput');
+        const nameInput = document.getElementById('nameInput');
+        const serviceInput = document.getElementById('serviceInput');
 
         // Variável para armazenar todos os dados da planilha
         let allData = [];
@@ -109,8 +111,6 @@
                 const card = document.createElement('div');
                 card.className = 'card bg-white p-6 rounded-xl border border-gray-200 mb-8';
 
-                // Limpa o número de contato para o formato de URL do WhatsApp
-            
                 let buttons = '';
                 if (contato && contato !== '') {
                     const whatsappButton = `<a href="https://wa.me/${contato}" target="_blank" class="flex-1 text-center bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-300">WhatsApp</a>`;
@@ -137,7 +137,7 @@
                     `;
                 }
                 
-                // Adiciona o botão do WhatsApp
+                // Adiciona os botões do WhatsApp e de copiar
                 cardContent += buttons;
 
                 card.innerHTML = cardContent;
@@ -147,14 +147,19 @@
             });
         };
 
-        // Função para filtrar os dados com base no texto de busca
+        // Função para filtrar os dados com base nos campos de busca
         const filterData = () => {
-            const searchTerm = searchInput.value.toLowerCase();
+            const nameTerm = nameInput.value.toLowerCase();
+            const serviceTerm = serviceInput.value.toLowerCase();
             const filteredData = allData.filter(row => {
                 const columns = row.c;
                 const nome = (columns[1] && columns[1].v ? columns[1].v : '').toLowerCase();
                 const servico = (columns[2] && columns[2].v ? columns[2].v : '').toLowerCase();
-                return nome.includes(searchTerm) || servico.includes(searchTerm);
+                
+                const nameMatch = nameTerm === '' || nome.includes(nameTerm);
+                const serviceMatch = serviceTerm === '' || servico.includes(serviceTerm);
+
+                return nameMatch && serviceMatch;
             });
             renderCards(filteredData);
         };
@@ -162,33 +167,26 @@
         // Função assíncrona para buscar os dados
         const fetchSpreadsheetData = async () => {
             try {
-                // Fetch dos dados da planilha
                 const response = await fetch(GOOGLE_SHEETS_URL);
                 const text = await response.text();
-
-                // O texto da resposta vem com um prefixo, então precisamos limpá-lo
                 const jsonText = text.substring(text.indexOf('(') + 1, text.lastIndexOf(')'));
                 const data = JSON.parse(jsonText);
-
-                // Armazena todos os dados para a função de busca
                 allData = data.table.rows;
 
                 if (allData.length === 0) {
                     container.innerHTML = '<p class="text-center text-gray-500 text-lg">Nenhum dado encontrado na planilha.</p>';
                     return;
                 }
-
-                // Renderiza todos os cartões na carga inicial
                 renderCards(allData);
-
             } catch (error) {
                 console.error('Erro ao buscar ou processar os dados da planilha:', error);
                 container.innerHTML = '<p class="text-center text-red-500 text-lg">Erro ao carregar o catálogo. Tente novamente mais tarde.</p>';
             }
         };
 
-        // Adiciona um listener para o evento 'input' no campo de busca
-        searchInput.addEventListener('input', filterData);
+        // Adiciona um listener para o evento 'input' em ambos os campos de busca
+        nameInput.addEventListener('input', filterData);
+        serviceInput.addEventListener('input', filterData);
 
         // Chama a função para buscar os dados quando a página carregar
         document.addEventListener('DOMContentLoaded', fetchSpreadsheetData);
