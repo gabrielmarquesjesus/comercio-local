@@ -69,13 +69,13 @@
 
                     // Extrai as informações de cada coluna usando os índices corrigidos
                     // Extrai as informações de cada coluna usando os índices corrigidos
-const nome = columns[1] && columns[1].v ? columns[1].v : 'Nome não disponível';
-const servico = columns[2] && columns[2].v ? columns[2].v : 'Serviço não disponível';
-const endereco = columns[3] && columns[3].v ? columns[3].v : 'Endereço não disponível';
-const contato = columns[4] && columns[4].v ? columns[4].v : 'Contato não disponível';
-const horario = columns[5] && columns[5].v ? columns[5].v : 'Não informado';
-const divulgacao = columns[6] && columns[6].v ? columns[6].v : '';
-const imageURL = columns[7] && columns[7].v ? columns[7].v : '';
+let nome = columns[1] && columns[1].v ? columns[1].v : 'Nome não disponível';
+let servico = columns[2] && columns[2].v ? columns[2].v : 'Serviço não disponível';
+let endereco = columns[3] && columns[3].v ? columns[3].v : 'Endereço não disponível';
+let contato = columns[4] && columns[4].v ? columns[4].v : 'Contato não disponível';
+let horario = columns[5] && columns[5].v ? columns[5].v : 'Não informado';
+let divulgacao = columns[6] && columns[6].v ? columns[6].v : '';
+let imageURL = columns[7] && columns[7].v ? columns[7].v : '';
 
                     
                     // Extrai o ID do arquivo do Google Drive e constrói um link de acesso direto
