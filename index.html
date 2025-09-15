@@ -16,6 +16,7 @@
         .card {
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
             transition: transform 0.2s, box-shadow 0.2s;
+            break-inside: avoid-column; /* Previne que os cartões sejam cortados entre as colunas */
         }
         .card:hover {
             transform: translateY(-5px);
@@ -31,8 +32,13 @@
         <p class="mt-4 text-xl sm:text-2xl text-gray-600 font-light">Iniciativa Amigos do Bairro</p>
     </header>
 
+    <!-- Campo de Busca Adicionado -->
+    <div class="mb-8">
+        <input type="text" id="searchInput" placeholder="Pesquisar por serviço ou nome do estabelecimento..." class="w-full p-4 text-lg rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
+    </div>
+
     <!-- Container para os cartões de comércio -->
-    <main id="catalog-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <main id="catalog-container" class="columns-1 sm:columns-2 lg:columns-3 gap-8">
         <!-- O conteúdo será injetado aqui pelo JavaScript -->
     </main>
 
@@ -44,6 +50,95 @@
         const GOOGLE_SHEETS_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
 
         const container = document.getElementById('catalog-container');
+        const searchInput = document.getElementById('searchInput');
+
+        // Variável para armazenar todos os dados da planilha
+        let allData = [];
+
+        // Função para renderizar os cartões na tela
+        const renderCards = (data) => {
+            container.innerHTML = ''; // Limpa o container antes de renderizar
+            if (data.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 text-lg">Nenhum resultado encontrado.</p>';
+                return;
+            }
+
+            // Itera sobre cada linha de dados (cada comércio)
+            data.forEach(row => {
+                const columns = row.c;
+
+                let nome = columns[1] && columns[1].v ? columns[1].v : 'Nome não disponível';
+                let servico = columns[2] && columns[2].v ? columns[2].v : 'Serviço não disponível';
+                let endereco = columns[3] && columns[3].v ? columns[3].v : 'Endereço não disponível';
+                let contato = columns[4] && columns[4].v ? columns[4].v : 'Contato não disponível';
+                let horario = columns[5] && columns[5].v ? columns[5].v : 'Não informado';
+                let divulgacao = columns[6] && columns[6].v ? columns[6].v : '';
+                let imageURL = columns[7] && columns[7].v ? columns[7].v : '';
+
+                // Extrai o ID do arquivo do Google Drive e constrói um link de acesso direto
+                if (imageURL.includes('drive.google.com')) {
+                    const idMatch = imageURL.match(/(?:id=|\/d\/)([a-zA-Z0-9_-]+)/);
+                    if (idMatch && idMatch[1]) {
+                        imageURL = `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+                    }
+                }
+
+                // Limita o texto de divulgação a 250 caracteres e adiciona reticências se necessário
+                if (divulgacao.length > 250) {
+                    divulgacao = divulgacao.substring(0, 250) + '...';
+                }
+
+                // Cria um novo elemento de cartão para o comércio
+                const card = document.createElement('div');
+                card.className = 'card bg-white p-6 rounded-xl border border-gray-200 mb-8';
+
+                // Limpa o número de contato para o formato de URL do WhatsApp
+                const cleanedContato = contato.replace(/\D/g, '');
+                let whatsappButton = '';
+                if (cleanedContato.length > 8) { // Verifica se o número tem um tamanho mínimo
+                    whatsappButton = `<a href="https://wa.me/${cleanedContato}" target="_blank" class="inline-block mt-4 w-full text-center bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-300">Entrar em contato via WhatsApp</a>`;
+                }
+
+                // Constrói o HTML interno do cartão, com labels em negrito e tratamento de erro para a imagem
+                let cardContent = `
+                    ${imageURL ? `<img src="${imageURL}" alt="Imagem de divulgação" class="w-full aspect-square object-cover rounded-lg mb-4" onerror="this.src='https://placehold.co/192x192/E2E8F0/94A3B8?text=Imagem+temporariamente+indisponível'; console.error('A imagem do Google Drive não pode ser carregada. Verifique as permissões de compartilhamento do arquivo.');">` : ''}
+                    <h2 class="text-2xl font-semibold text-blue-800 mb-2">${nome}</h2>
+                    <p class="text-gray-600 mb-1"><span class="font-bold text-gray-700">Prestação de Serviço:</span> ${servico}</p>
+                    <p class="text-gray-600 mb-1"><span class="font-bold text-gray-700">Endereço:</span> ${endereco}</p>
+                    <p class="text-600 mb-1"><span class="font-bold text-gray-700">Contato:</span> ${contato}</p>
+                    <p class="text-gray-600 mb-4"><span class="font-bold text-gray-700">Horário de funcionamento:</span> ${horario}</p>
+                `;
+
+                // Adiciona o texto de divulgação se existir
+                if (divulgacao.trim() !== '') {
+                    cardContent += `
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                            <p class="text-gray-600 italic">${divulgacao}</p>
+                        </div>
+                    `;
+                }
+                
+                // Adiciona o botão do WhatsApp
+                cardContent += whatsappButton;
+
+                card.innerHTML = cardContent;
+
+                // Adiciona o cartão ao container principal
+                container.appendChild(card);
+            });
+        };
+
+        // Função para filtrar os dados com base no texto de busca
+        const filterData = () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filteredData = allData.filter(row => {
+                const columns = row.c;
+                const nome = (columns[1] && columns[1].v ? columns[1].v : '').toLowerCase();
+                const servico = (columns[2] && columns[2].v ? columns[2].v : '').toLowerCase();
+                return nome.includes(searchTerm) || servico.includes(searchTerm);
+            });
+            renderCards(filteredData);
+        };
 
         // Função assíncrona para buscar os dados
         const fetchSpreadsheetData = async () => {
@@ -56,74 +151,25 @@
                 const jsonText = text.substring(text.indexOf('(') + 1, text.lastIndexOf(')'));
                 const data = JSON.parse(jsonText);
 
-                const rows = data.table.rows;
+                // Armazena todos os dados para a função de busca
+                allData = data.table.rows;
 
-                if (rows.length === 0) {
+                if (allData.length === 0) {
                     container.innerHTML = '<p class="text-center text-gray-500 text-lg">Nenhum dado encontrado na planilha.</p>';
                     return;
                 }
 
-                // Itera sobre cada linha de dados (cada comércio)
-                rows.forEach(row => {
-                    const columns = row.c;
-
-                    // Extrai as informações de cada coluna usando os índices corrigidos
-                    // Extrai as informações de cada coluna usando os índices corrigidos
-let nome = columns[1] && columns[1].v ? columns[1].v : 'Nome não disponível';
-let servico = columns[2] && columns[2].v ? columns[2].v : 'Serviço não disponível';
-let endereco = columns[3] && columns[3].v ? columns[3].v : 'Endereço não disponível';
-let contato = columns[4] && columns[4].v ? columns[4].v : 'Contato não disponível';
-let horario = columns[5] && columns[5].v ? columns[5].v : 'Não informado';
-let divulgacao = columns[6] && columns[6].v ? columns[6].v : '';
-let imageURL = columns[7] && columns[7].v ? columns[7].v : '';
-
-                    
-                    // Extrai o ID do arquivo do Google Drive e constrói um link de acesso direto
-                    if (imageURL.includes('drive.google.com')) {
-                        const idMatch = imageURL.match(/(?:id=|\/d\/)([a-zA-Z0-9_-]+)/);
-                        if (idMatch && idMatch[1]) {
-                            imageURL = `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
-                        }
-                    }
-
-                    // Limita o texto de divulgação a 250 caracteres e adiciona reticências se necessário
-                    if (divulgacao.length > 250) {
-                        divulgacao = divulgacao.substring(0, 250) + '...';
-                    }
-
-                    // Cria um novo elemento de cartão para o comércio
-                    const card = document.createElement('div');
-                    card.className = 'card bg-white p-6 rounded-xl border border-gray-200';
-
-                    // Constrói o HTML interno do cartão, com labels em negrito e tratamento de erro para a imagem
-                    let cardContent = `
-                        ${imageURL ? `<img src="${imageURL}" alt="Imagem de divulgação" class="w-full aspect-square object-cover rounded-lg mb-4" onerror="this.src='https://placehold.co/192x192/E2E8F0/94A3B8?text=Imagem+temporariamente+indisponível'; console.error('A imagem do Google Drive não pode ser carregada. Verifique as permissões de compartilhamento do arquivo.');">` : ''}
-                        <h2 class="text-2xl font-semibold text-blue-800 mb-2">${nome}</h2>
-                        <p class="text-gray-600 mb-1"><span class="font-bold text-gray-700">Prestação de Serviço:</span> ${servico}</p>
-                        <p class="text-gray-600 mb-1"><span class="font-bold text-gray-700">Endereço:</span> ${endereco}</p>
-                        <p class="text-gray-600 mb-1"><span class="font-bold text-gray-700">Contato:</span> ${contato}</p>
-                        <p class="text-gray-600 mb-4"><span class="font-bold text-gray-700">Horário de funcionamento:</span> ${horario}</p>
-                    `;
-
-                    // Adiciona o texto de divulgação se existir
-                    if (divulgacao.trim() !== '') {
-                        cardContent += `
-                            <div class="mt-4 pt-4 border-t border-gray-200">
-                                <p class="text-gray-600 italic">${divulgacao}</p>
-                            </div>
-                        `;
-                    }
-                    card.innerHTML = cardContent;
-
-                    // Adiciona o cartão ao container principal
-                    container.appendChild(card);
-                });
+                // Renderiza todos os cartões na carga inicial
+                renderCards(allData);
 
             } catch (error) {
                 console.error('Erro ao buscar ou processar os dados da planilha:', error);
                 container.innerHTML = '<p class="text-center text-red-500 text-lg">Erro ao carregar o catálogo. Tente novamente mais tarde.</p>';
             }
         };
+
+        // Adiciona um listener para o evento 'input' no campo de busca
+        searchInput.addEventListener('input', filterData);
 
         // Chama a função para buscar os dados quando a página carregar
         document.addEventListener('DOMContentLoaded', fetchSpreadsheetData);
