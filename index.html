@@ -67,10 +67,6 @@
                 rows.forEach(row => {
                     const columns = row.c;
 
-                    // A ordem das colunas é: Data (0), Nome (1), Serviço (2), Endereço (3), Contato (4), Horário (5), Divulgação (6), Imagem (7)
-                    // Verifica se a linha tem dados suficientes
-                    if (columns.length < 7 || !columns[1] || !columns[2] || !columns[3] || !columns[4] || !columns[5]) return;
-
                     // Extrai as informações de cada coluna usando os índices corrigidos
                     const nome = columns[1].v || 'Nome não disponível';
                     const servico = columns[2].v || 'Serviço não disponível';
