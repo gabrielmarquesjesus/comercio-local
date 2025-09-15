@@ -97,7 +97,7 @@ let imageURL = columns[7] && columns[7].v ? columns[7].v : '';
 
                     // Constrói o HTML interno do cartão, com labels em negrito e tratamento de erro para a imagem
                     let cardContent = `
-                        ${imageURL ? `<img src="${imageURL}" alt="Imagem de divulgação" class="w-full aspect-square object-cover rounded-lg mb-4" onerror="this.src='https://placehold.co/192x192/E2E8F0/94A3B8?text=Imagem+indisponível'; console.error('A imagem do Google Drive não pode ser carregada. Verifique as permissões de compartilhamento do arquivo.');">` : ''}
+                        ${imageURL ? `<img src="${imageURL}" alt="Imagem de divulgação" class="w-full aspect-square object-cover rounded-lg mb-4" onerror="this.src='https://placehold.co/192x192/E2E8F0/94A3B8?text=Imagem+temporariamente+indisponível'; console.error('A imagem do Google Drive não pode ser carregada. Verifique as permissões de compartilhamento do arquivo.');">` : ''}
                         <h2 class="text-2xl font-semibold text-blue-800 mb-2">${nome}</h2>
                         <p class="text-gray-600 mb-1"><span class="font-bold text-gray-700">Prestação de Serviço:</span> ${servico}</p>
                         <p class="text-gray-600 mb-1"><span class="font-bold text-gray-700">Endereço:</span> ${endereco}</p>
