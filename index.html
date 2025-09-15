@@ -55,6 +55,23 @@
         // Variável para armazenar todos os dados da planilha
         let allData = [];
 
+        // Função para copiar o texto para a área de transferência
+        const copyContact = (contact, button) => {
+            const tempInput = document.createElement('textarea');
+            tempInput.value = contact;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            // Adiciona feedback visual ao botão
+            const originalText = button.innerHTML;
+            button.innerHTML = 'Copiado!';
+            setTimeout(() => {
+                button.innerHTML = originalText;
+            }, 2000);
+        };
+
         // Função para renderizar os cartões na tela
         const renderCards = (data) => {
             container.innerHTML = ''; // Limpa o container antes de renderizar
@@ -70,7 +87,7 @@
                 let nome = columns[1] && columns[1].v ? columns[1].v : 'Nome não disponível';
                 let servico = columns[2] && columns[2].v ? columns[2].v : 'Serviço não disponível';
                 let endereco = columns[3] && columns[3].v ? columns[3].v : 'Endereço não disponível';
-                let contato = columns[4] && columns[4].v ? columns[4].v : 'Contato não disponível';
+                let contato = columns[4] && columns[4].v ? columns[4].v : '';
                 let horario = columns[5] && columns[5].v ? columns[5].v : 'Não informado';
                 let divulgacao = columns[6] && columns[6].v ? columns[6].v : '';
                 let imageURL = columns[7] && columns[7].v ? columns[7].v : '';
@@ -93,10 +110,12 @@
                 card.className = 'card bg-white p-6 rounded-xl border border-gray-200 mb-8';
 
                 // Limpa o número de contato para o formato de URL do WhatsApp
-                const cleanedContato = contato.replace(/\D/g, '');
-                let whatsappButton = '';
-                if (cleanedContato.length > 8) { // Verifica se o número tem um tamanho mínimo
-                    whatsappButton = `<a href="https://wa.me/${cleanedContato}" target="_blank" class="inline-block mt-4 w-full text-center bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-300">Entrar em contato via WhatsApp</a>`;
+            
+                let buttons = '';
+                if (contato && contato !== '') {
+                    const whatsappButton = `<a href="https://wa.me/${contato}" target="_blank" class="flex-1 text-center bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-300">WhatsApp</a>`;
+                    const copyButton = `<button onclick="copyContact('${contato}', this)" class="flex-1 text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-300">Copiar Contato</button>`;
+                    buttons = `<div class="flex gap-4 mt-4">${whatsappButton}${copyButton}</div>`;
                 }
 
                 // Constrói o HTML interno do cartão, com labels em negrito e tratamento de erro para a imagem
@@ -119,7 +138,7 @@
                 }
                 
                 // Adiciona o botão do WhatsApp
-                cardContent += whatsappButton;
+                cardContent += buttons;
 
                 card.innerHTML = cardContent;
 
