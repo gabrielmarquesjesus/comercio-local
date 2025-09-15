@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciativa Amigos do Bairro</title>
+    <!-- Inclui a CDN do Tailwind CSS para estilização moderna e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+            color: #334155;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15), 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="p-6">
+
+    <!-- Cabeçalho -->
+    <header class="bg-white rounded-xl shadow-lg p-8 mb-8 text-center">
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-blue-900 tracking-tight">Catálogo de Comércios Locais</h1>
+        <p class="mt-4 text-xl sm:text-2xl text-gray-600 font-light">Iniciativa Amigos do Bairro</p>
+    </header>
+
+    <!-- Container para os cartões de comércio -->
+    <main id="catalog-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- O conteúdo será injetado aqui pelo JavaScript -->
+    </main>
+
+    <!-- Script para carregar e exibir os dados -->
+    <script>
+        // ID da planilha do Google Sheets
+        const SPREADSHEET_ID = '1VZW6P34gL0Y8LSad5OeG1R2NDj6D_Iir1Nj-E7yf0DI';
+        // URL da API de visualização do Google Sheets para obter dados em formato JSON
+        const GOOGLE_SHEETS_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+
+        const container = document.getElementById('catalog-container');
+
+        // Função assíncrona para buscar os dados
+        const fetchSpreadsheetData = async () => {
+            try {
+                // Fetch dos dados da planilha
+                const response = await fetch(GOOGLE_SHEETS_URL);
+                const text = await response.text();
+
+                // O texto da resposta vem com um prefixo, então precisamos limpá-lo
+                const jsonText = text.substring(text.indexOf('(') + 1, text.lastIndexOf(')'));
+                const data = JSON.parse(jsonText);
+
+                const rows = data.table.rows;
+
+                if (rows.length === 0) {
+                    container.innerHTML = '<p class="text-center text-gray-500 text-lg">Nenhum dado encontrado na planilha.</p>';
+                    return;
+                }
+
+                // Itera sobre cada linha de dados (cada comércio)
+                rows.forEach(row => {
+                    const columns = row.c;
+
+                    // A ordem das colunas é: Data (0), Nome (1), Serviço (2), Endereço (3), Contato (4), Horário (5), Divulgação (6)
+                    // Verifica se a linha tem dados suficientes
+                    if (columns.length < 7 || !columns[1] || !columns[2] || !columns[3] || !columns[4] || !columns[5]) return;
+
+                    // Extrai as informações de cada coluna usando os índices corrigidos
+                    const nome = columns[1].v || 'Nome não disponível';
+                    const servico = columns[2].v || 'Serviço não disponível';
+                    const endereco = columns[3].v || 'Endereço não disponível';
+                    const contato = columns[4].v || 'Contato não disponível';
+                    const horario = columns[5].v || 'Não informado';
+                    const divulgacao = columns[6] && columns[6].v ? columns[6].v : '';
+
+                    // Cria um novo elemento de cartão para o comércio
+                    const card = document.createElement('div');
+                    card.className = 'card bg-white p-6 rounded-xl border border-gray-200';
+
+                    // Constrói o HTML interno do cartão, com labels em negrito
+                    let cardContent = `
+                        <h2 class="text-2xl font-semibold text-blue-800 mb-2">${nome}</h2>
+                        <p class="text-gray-600 mb-1"><span class="font-bold text-gray-700">Prestação de Serviço:</span> ${servico}</p>
+                        <p class="text-gray-600 mb-1"><span class="font-bold text-gray-700">Endereço:</span> ${endereco}</p>
+                        <p class="text-gray-600 mb-1"><span class="font-bold text-gray-700">Contato:</span> ${contato}</p>
+                        <p class="text-gray-600 mb-4"><span class="font-bold text-gray-700">Horário de funcionamento:</span> ${horario}</p>
+                    `;
+
+                    // Adiciona o texto de divulgação se existir
+                    if (divulgacao.trim() !== '') {
+                        cardContent += `
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <p class="text-gray-600 italic">${divulgacao}</p>
+                            </div>
+                        `;
+                    }
+                    card.innerHTML = cardContent;
+
+                    // Adiciona o cartão ao container principal
+                    container.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error('Erro ao buscar ou processar os dados da planilha:', error);
+                container.innerHTML = '<p class="text-center text-red-500 text-lg">Erro ao carregar o catálogo. Tente novamente mais tarde.</p>';
+            }
+        };
+
+        // Chama a função para buscar os dados quando a página carregar
+        document.addEventListener('DOMContentLoaded', fetchSpreadsheetData);
+    </script>
+
+</body>
+</html>
