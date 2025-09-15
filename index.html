@@ -67,7 +67,7 @@
                 rows.forEach(row => {
                     const columns = row.c;
 
-                    // A ordem das colunas é: Data (0), Nome (1), Serviço (2), Endereço (3), Contato (4), Horário (5), Divulgação (6)
+                    // A ordem das colunas é: Data (0), Nome (1), Serviço (2), Endereço (3), Contato (4), Horário (5), Divulgação (6), Imagem (7)
                     // Verifica se a linha tem dados suficientes
                     if (columns.length < 7 || !columns[1] || !columns[2] || !columns[3] || !columns[4] || !columns[5]) return;
 
@@ -77,14 +77,29 @@
                     const endereco = columns[3].v || 'Endereço não disponível';
                     const contato = columns[4].v || 'Contato não disponível';
                     const horario = columns[5].v || 'Não informado';
-                    const divulgacao = columns[6] && columns[6].v ? columns[6].v : '';
+                    let divulgacao = columns[6] && columns[6].v ? columns[6].v : '';
+                    let imageURL = columns[7] && columns[7].v ? columns[7].v : '';
+                    
+                    // Extrai o ID do arquivo do Google Drive e constrói um link de acesso direto
+                    if (imageURL.includes('drive.google.com')) {
+                        const idMatch = imageURL.match(/(?:id=|\/d\/)([a-zA-Z0-9_-]+)/);
+                        if (idMatch && idMatch[1]) {
+                            imageURL = `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+                        }
+                    }
+
+                    // Limita o texto de divulgação a 250 caracteres e adiciona reticências se necessário
+                    if (divulgacao.length > 250) {
+                        divulgacao = divulgacao.substring(0, 250) + '...';
+                    }
 
                     // Cria um novo elemento de cartão para o comércio
                     const card = document.createElement('div');
                     card.className = 'card bg-white p-6 rounded-xl border border-gray-200';
 
-                    // Constrói o HTML interno do cartão, com labels em negrito
+                    // Constrói o HTML interno do cartão, com labels em negrito e tratamento de erro para a imagem
                     let cardContent = `
+                        ${imageURL ? `<img src="${imageURL}" alt="Imagem de divulgação" class="w-full aspect-square object-cover rounded-lg mb-4" onerror="this.src='https://placehold.co/192x192/E2E8F0/94A3B8?text=Imagem+indisponível'; console.error('A imagem do Google Drive não pode ser carregada. Verifique as permissões de compartilhamento do arquivo.');">` : ''}
                         <h2 class="text-2xl font-semibold text-blue-800 mb-2">${nome}</h2>
                         <p class="text-gray-600 mb-1"><span class="font-bold text-gray-700">Prestação de Serviço:</span> ${servico}</p>
                         <p class="text-gray-600 mb-1"><span class="font-bold text-gray-700">Endereço:</span> ${endereco}</p>
