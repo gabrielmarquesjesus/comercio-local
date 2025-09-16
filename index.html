@@ -33,10 +33,13 @@
     </header>
 
     <!-- Campos de Busca Adicionados -->
-    <div class="mb-8 flex flex-col sm:flex-row gap-4">
+    <div class="mb-4 flex flex-col sm:flex-row gap-4">
         <input type="text" id="nameInput" placeholder="Nome do estabelecimento..." class="w-full p-4 text-lg rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
         <input type="text" id="serviceInput" placeholder="Prestação de serviço..." class="w-full p-4 text-lg rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
     </div>
+
+    <!-- Contagem de Resultados -->
+    <div id="resultCount" class="text-center text-lg text-gray-700 font-semibold mb-4"></div>
 
     <!-- Container para os cartões de comércio -->
     <main id="catalog-container" class="columns-1 sm:columns-2 lg:columns-3 gap-8">
@@ -53,6 +56,7 @@
         const container = document.getElementById('catalog-container');
         const nameInput = document.getElementById('nameInput');
         const serviceInput = document.getElementById('serviceInput');
+        const resultCountElement = document.getElementById('resultCount');
 
         // Variável para armazenar todos os dados da planilha
         let allData = [];
@@ -77,8 +81,16 @@
         // Função para renderizar os cartões na tela
         const renderCards = (data) => {
             container.innerHTML = ''; // Limpa o container antes de renderizar
+            
+            // Atualiza a contagem de resultados
+            if (data.length > 0) {
+                resultCountElement.innerHTML = `Encontrados ${data.length} estabelecimentos.`;
+            } else {
+                resultCountElement.innerHTML = `Nenhum resultado encontrado.`;
+            }
+
             if (data.length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-500 text-lg">Nenhum resultado encontrado.</p>';
+                container.innerHTML = '<p class="text-center text-gray-500 text-lg">Tente outra busca.</p>';
                 return;
             }
 
@@ -114,7 +126,7 @@
                 let buttons = '';
                 if (contato && contato !== '') {
                     const whatsappButton = `<a href="https://wa.me/${contato}" target="_blank" class="flex-1 text-center bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-300">WhatsApp</a>`;
-                    const copyButton = `<button onclick="copyContact('${contato}', this)" class="flex-1 text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-300">Copiar Contato</button>`;
+                    const copyButton = `<a href="#" onclick="event.preventDefault(); copyContact('${contato}', this)" class="flex-1 text-center text-blue-500 hover:text-blue-700 hover:underline mt-2 font-bold transition duration-300">Copiar Contato</a>`;
                     buttons = `<div class="flex gap-4 mt-4">${whatsappButton}${copyButton}</div>`;
                 }
 
@@ -174,13 +186,15 @@
                 allData = data.table.rows;
 
                 if (allData.length === 0) {
-                    container.innerHTML = '<p class="text-center text-gray-500 text-lg">Nenhum dado encontrado na planilha.</p>';
+                    resultCountElement.innerHTML = 'Nenhum dado encontrado na planilha.';
+                    container.innerHTML = '';
                     return;
                 }
                 renderCards(allData);
             } catch (error) {
                 console.error('Erro ao buscar ou processar os dados da planilha:', error);
-                container.innerHTML = '<p class="text-center text-red-500 text-lg">Erro ao carregar o catálogo. Tente novamente mais tarde.</p>';
+                resultCountElement.innerHTML = 'Erro ao carregar o catálogo.';
+                container.innerHTML = '<p class="text-center text-red-500 text-lg">Tente novamente mais tarde.</p>';
             }
         };
 
