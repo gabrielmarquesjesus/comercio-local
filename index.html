@@ -6,6 +6,21 @@
     <title>Iniciativa Amigos do Bairro</title>
     <!-- Inclui a CDN do Tailwind CSS para estilização moderna e responsiva -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configura o Tailwind para usar as cores personalizadas
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'accent-orange': '#E54707',
+                        'dark-teal': '#043430',
+                        'light-green': '#519676',
+                        'darker-teal': '#103531',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
         body {
@@ -27,19 +42,19 @@
 <body class="p-6">
 
     <!-- Cabeçalho -->
-    <header class="bg-white rounded-xl shadow-lg p-8 mb-8 text-center">
-        <h1 class="text-4xl sm:text-5xl font-extrabold text-blue-900 tracking-tight">Catálogo de Comércios Locais</h1>
-        <p class="mt-4 text-xl sm:text-2xl text-gray-600 font-light">Iniciativa Amigos do Bairro</p>
+    <header class="bg-white rounded-xl shadow-lg p-6 sm:p-8 mb-8 text-center">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-accent-orange tracking-tight">Catálogo de Comércios Locais</h1>
+        <p class="mt-2 text-lg sm:text-xl md:text-2xl text-dark-teal font-light">Iniciativa Amigos do Bairro</p>
     </header>
 
     <!-- Campos de Busca Adicionados -->
     <div class="mb-4 flex flex-col sm:flex-row gap-4">
-        <input type="text" id="nameInput" placeholder="Nome do estabelecimento..." class="w-full p-4 text-lg rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
-        <input type="text" id="serviceInput" placeholder="Prestação de serviço..." class="w-full p-4 text-lg rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
+        <input type="text" id="nameInput" placeholder="Nome do estabelecimento..." class="w-full p-4 text-lg rounded-xl border border-gray-300 focus:ring-2 focus:ring-light-green focus:border-transparent transition duration-200">
+        <input type="text" id="serviceInput" placeholder="Prestação de serviço..." class="w-full p-4 text-lg rounded-xl border border-gray-300 focus:ring-2 focus:ring-light-green focus:border-transparent transition duration-200">
     </div>
 
     <!-- Contagem de Resultados -->
-    <div id="resultCount" class="text-center text-lg text-gray-700 font-semibold mb-4"></div>
+    <div id="resultCount" class="text-center text-lg text-dark-teal font-semibold mb-4"></div>
 
     <!-- Container para os cartões de comércio -->
     <main id="catalog-container" class="columns-1 sm:columns-2 lg:columns-3 gap-8">
@@ -125,26 +140,26 @@
 
                 let buttons = '';
                 if (contato && contato !== '') {
-                    const whatsappButton = `<a href="https://wa.me/${contato}" target="_blank" class="flex-1 text-center bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-300">WhatsApp</a>`;
-                    const copyButton = `<a href="#" onclick="event.preventDefault(); copyContact('${contato}', this)" class="flex-1 text-center text-blue-500 hover:text-blue-700 hover:underline mt-2 font-bold transition duration-300">Copiar Contato</a>`;
+                    const whatsappButton = `<a href="https://wa.me/${contato}" target="_blank" class="flex-1 text-center bg-light-green hover:bg-light-green text-white font-bold py-2 px-4 rounded-full transition duration-300">WhatsApp</a>`;
+                    const copyButton = `<a href="#" onclick="event.preventDefault(); copyContact('${contato}', this)" class="flex-1 text-center text-accent-orange hover:text-orange-700 hover:underline mt-2 font-bold transition duration-300">Copiar Contato</a>`;
                     buttons = `<div class="flex gap-4 mt-4">${whatsappButton}${copyButton}</div>`;
                 }
 
                 // Constrói o HTML interno do cartão, com labels em negrito e tratamento de erro para a imagem
                 let cardContent = `
                     ${imageURL ? `<img src="${imageURL}" alt="Imagem de divulgação" class="w-full aspect-square object-cover rounded-lg mb-4" onerror="this.src='https://placehold.co/192x192/E2E8F0/94A3B8?text=Imagem+temporariamente+indisponível'; console.error('A imagem do Google Drive não pode ser carregada. Verifique as permissões de compartilhamento do arquivo.');">` : ''}
-                    <h2 class="text-2xl font-semibold text-blue-800 mb-2">${nome}</h2>
-                    <p class="text-gray-600 mb-1"><span class="font-bold text-gray-700">Prestação de Serviço:</span> ${servico}</p>
-                    <p class="text-gray-600 mb-1"><span class="font-bold text-gray-700">Endereço:</span> ${endereco}</p>
-                    <p class="text-600 mb-1"><span class="font-bold text-gray-700">Contato:</span> ${contato}</p>
-                    <p class="text-gray-600 mb-4"><span class="font-bold text-gray-700">Horário de funcionamento:</span> ${horario}</p>
+                    <h2 class="text-2xl font-semibold text-dark-teal mb-2">${nome}</h2>
+                    <p class="text-dark-teal mb-1"><span class="font-bold text-darker-teal">Prestação de Serviço:</span> ${servico}</p>
+                    <p class="text-dark-teal mb-1"><span class="font-bold text-darker-teal">Endereço:</span> ${endereco}</p>
+                    <p class="text-dark-teal mb-1"><span class="font-bold text-darker-teal">Contato:</span> ${contato}</p>
+                    <p class="text-dark-teal mb-4"><span class="font-bold text-darker-teal">Horário de funcionamento:</span> ${horario}</p>
                 `;
 
                 // Adiciona o texto de divulgação se existir
                 if (divulgacao.trim() !== '') {
                     cardContent += `
                         <div class="mt-4 pt-4 border-t border-gray-200">
-                            <p class="text-gray-600 italic">${divulgacao}</p>
+                            <p class="text-dark-teal italic">${divulgacao}</p>
                         </div>
                     `;
                 }
