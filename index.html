@@ -28,22 +28,47 @@
             font-family: 'Inter', sans-serif;
             background-color: #f7f9fc;
             color: #334155;
+            transition: background-color 0.3s ease-in-out;
         }
         .card {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
-            transition: transform 0.2s, box-shadow 0.2s;
-            break-inside: avoid-column; /* Previne que os cartões sejam cortados entre as colunas */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            break-inside: avoid-column;
         }
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15), 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.08);
+        }
+        /* Estilização para o componente colapsável */
+        details summary {
+            cursor: pointer;
+            padding: 0.75rem; /* Ajuste para tornar o padding menor */
+            border-radius: 0.75rem;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: background-color 0.2s ease-in-out;
+        }
+        details summary:hover {
+            background-color: #f0f4f8;
+        }
+        details summary::-webkit-details-marker {
+            display: none;
+        }
+        details summary::after {
+            content: '▼';
+            float: right;
+            transition: transform 0.2s;
+            color: #519676;
+        }
+        details[open] summary::after {
+            transform: rotate(180deg);
         }
     </style>
 </head>
 <body class="p-6">
 
     <!-- Cabeçalho -->
-    <header class="bg-white rounded-xl shadow-lg p-6 sm:p-8 mb-8 text-center">
+    <header class="bg-white rounded-xl shadow-lg p-6 sm:p-8 mb-2 text-center">
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-accent-orange tracking-tight">Catálogo de Comércios Locais</h1>
         <p class="mt-2 text-sm sm:text-base text-dark-teal font-light">Iniciativa Amigos do Bairro</p>
         <div class="mt-4 flex flex-col sm:flex-row justify-center items-center gap-4">
@@ -56,11 +81,18 @@
         </div>
     </header>
 
-    <!-- Campos de Busca Adicionados -->
-    <div class="mb-4 flex flex-col sm:flex-row gap-4">
-        <input type="text" id="nameInput" placeholder="Nome do estabelecimento..." class="w-full p-4 text-lg rounded-xl border border-gray-300 focus:ring-2 focus:ring-light-green focus:border-transparent transition duration-200">
-        <input type="text" id="serviceInput" placeholder="Prestação de serviço..." class="w-full p-4 text-lg rounded-xl border border-gray-300 focus:ring-2 focus:ring-light-green focus:border-transparent transition duration-200">
-    </div>
+    <!-- Componente colapsável para os campos de busca -->
+    <details class="mb-2 rounded-xl overflow-hidden transition-all duration-300">
+        <summary class="text-lg font-semibold text-dark-teal hover:text-light-green transition-colors">
+            Filtrar por nome ou serviço
+        </summary>
+        <div class="p-3 bg-white border border-gray-200 border-t-0 rounded-b-xl">
+            <div class="flex flex-col sm:flex-row gap-4">
+                <input type="text" id="nameInput" placeholder="Nome do estabelecimento..." class="w-full p-2 text-md rounded-xl border border-gray-300 focus:ring-2 focus:ring-light-green focus:border-transparent transition duration-200">
+                <input type="text" id="serviceInput" placeholder="Prestação de serviço..." class="w-full p-2 text-md rounded-xl border border-gray-300 focus:ring-2 focus:ring-light-green focus:border-transparent transition duration-200">
+            </div>
+        </div>
+    </details>
 
     <!-- Contagem de Resultados -->
     <div id="resultCount" class="text-center text-lg text-dark-teal font-semibold mb-4"></div>
@@ -87,14 +119,30 @@
 
         // Função para copiar o texto para a área de transferência
         const copyContact = (contact, button) => {
+            // Usa a API Clipboard, que é mais moderna, e fallback para document.execCommand
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(contact).then(() => {
+                    showCopyFeedback(button);
+                }).catch(err => {
+                    console.error('Falha ao copiar usando a API Clipboard: ', err);
+                    fallbackCopy(contact, button);
+                });
+            } else {
+                fallbackCopy(contact, button);
+            }
+        };
+
+        const fallbackCopy = (contact, button) => {
             const tempInput = document.createElement('textarea');
             tempInput.value = contact;
             document.body.appendChild(tempInput);
             tempInput.select();
             document.execCommand('copy');
             document.body.removeChild(tempInput);
+            showCopyFeedback(button);
+        };
 
-            // Adiciona feedback visual ao botão
+        const showCopyFeedback = (button) => {
             const originalText = button.innerHTML;
             button.innerHTML = 'Copiado!';
             setTimeout(() => {
@@ -150,9 +198,9 @@
                 let buttons = '';
                 if (contato && contato !== '') {
                     const whatsappMessage = encodeURIComponent("Olá, vim pelo grupo Amigos do Bairro...");
-                    const whatsappButton = `<a href="https://wa.me/${contato}?text=${whatsappMessage}" target="_blank" class="flex-1 text-center bg-light-green hover:bg-light-green text-white font-bold py-2 px-4 rounded-full transition duration-300">WhatsApp</a>`;
-                    const copyButton = `<a href="#" onclick="event.preventDefault(); copyContact('${contato}', this)" class="flex-1 text-center text-accent-orange hover:text-orange-700 hover:underline mt-2 font-bold transition duration-300">Copiar Contato</a>`;
-                    buttons = `<div class="flex gap-4 mt-4">${whatsappButton}${copyButton}</div>`;
+                    const whatsappButton = `<a href="https://wa.me/${contato}?text=${whatsappMessage}" target="_blank" class="flex-1 text-center bg-light-green hover:bg-dark-teal text-white font-bold py-2 px-4 rounded-full transition duration-300">WhatsApp</a>`;
+                    const copyButton = `<a href="#" onclick="event.preventDefault(); copyContact('${contato}', this)" class="flex-1 text-center text-accent-orange hover:text-dark-orange hover:underline mt-2 font-bold transition duration-300">Copiar Contato</a>`;
+                    buttons = `<div class="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4">${whatsappButton}${copyButton}</div>`;
                 }
 
                 // Constrói o HTML interno do cartão, com labels em negrito e tratamento de erro para a imagem
